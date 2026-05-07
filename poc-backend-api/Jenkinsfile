@@ -1,38 +1,69 @@
 pipeline {
   agent any
 
+  environment {
+    AWS_DEFAULT_REGION = 'us-east-1'
+    EB_APP = 'poc-enterprise-app'
+    EB_ENV = 'poc-backend-prod'
+    S3_BUCKET = 'poc-enterprise-hr-frontend-842806122556'
+  }
+
   stages {
     stage('Install') {
       steps {
-        sh 'npm ci'
+        dir('poc-backend-api') {
+          sh 'npm ci'
+        }
       }
     }
 
     stage('Test') {
       steps {
-        sh 'npm test -- --passWithNoTests'
-      }
-    }
-
-    stage('Build') {
-      steps {
-        sh 'echo Build complete'
+        dir('poc-backend-api') {
+          sh 'npm test -- --passWithNoTests'
+        }
       }
     }
 
     stage('Package') {
       steps {
-        sh 'zip -r artifact.zip . -x "*.git*" "node_modules/*"'
+        dir('poc-backend-api') {
+          sh 'zip -r artifact.zip . -x "*.git*" "node_modules/*" ".env"'
+        }
+      }
+    }
+
+    stage('Deploy') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'aws-creds',
+                         usernameVariable: 'AWS_ACCESS_KEY_ID',
+                         passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+          dir('poc-backend-api') {
+            sh '''
+              VERSION="jenkins-${BUILD_NUMBER}-$(date +%s)"
+              aws s3 cp artifact.zip s3://${S3_BUCKET}/backend-${VERSION}.zip
+              aws elasticbeanstalk create-application-version \
+                --application-name ${EB_APP} \
+                --version-label ${VERSION} \
+                --source-bundle S3Bucket=${S3_BUCKET},S3Key=backend-${VERSION}.zip
+              aws elasticbeanstalk update-environment \
+                --application-name ${EB_APP} \
+                --environment-name ${EB_ENV} \
+                --version-label ${VERSION}
+              echo "Deployed version ${VERSION} to Elastic Beanstalk"
+            '''
+          }
+        }
       }
     }
   }
 
   post {
     success {
-      echo 'Backend build succeeded'
+      echo 'Backend deployed successfully'
     }
     failure {
-      echo 'Backend build failed'
+      echo 'Backend deployment failed'
     }
   }
 }

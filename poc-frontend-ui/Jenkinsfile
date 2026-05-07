@@ -1,38 +1,54 @@
 pipeline {
   agent any
 
+  environment {
+    AWS_DEFAULT_REGION = 'us-east-1'
+    S3_BUCKET = 'poc-enterprise-hr-frontend-842806122556'
+    CF_DIST_ID = 'E1PR9TUS2OTIXH'
+  }
+
   stages {
     stage('Install') {
       steps {
-        sh 'npm ci'
-      }
-    }
-
-    stage('Test') {
-      steps {
-        sh 'npm test -- --passWithNoTests'
+        dir('poc-frontend-ui') {
+          sh 'npm ci'
+        }
       }
     }
 
     stage('Build') {
       steps {
-        sh 'npm run build'
+        dir('poc-frontend-ui') {
+          sh 'npm run build'
+        }
       }
     }
 
-    stage('Package') {
+    stage('Deploy') {
       steps {
-        sh 'zip -r artifact.zip dist/'
+        withCredentials([usernamePassword(credentialsId: 'aws-creds',
+                         usernameVariable: 'AWS_ACCESS_KEY_ID',
+                         passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+          dir('poc-frontend-ui') {
+            sh '''
+              aws s3 sync dist/ s3://${S3_BUCKET} --delete
+              aws cloudfront create-invalidation \
+                --distribution-id ${CF_DIST_ID} \
+                --paths "/*"
+              echo "Frontend deployed to S3 and CloudFront cache invalidated"
+            '''
+          }
+        }
       }
     }
   }
 
   post {
     success {
-      echo 'Frontend build succeeded'
+      echo 'Frontend deployed successfully'
     }
     failure {
-      echo 'Frontend build failed'
+      echo 'Frontend deployment failed'
     }
   }
 }
