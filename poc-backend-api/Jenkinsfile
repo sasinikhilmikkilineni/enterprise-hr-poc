@@ -5,7 +5,7 @@ pipeline {
     AWS_DEFAULT_REGION = 'us-east-1'
     EB_APP = 'poc-enterprise-app'
     EB_ENV = 'poc-backend-prod'
-    S3_BUCKET = 'poc-enterprise-hr-frontend-842806122556'
+    S3_BUCKET = 'elasticbeanstalk-us-east-1-842806122556'
   }
 
   stages {
