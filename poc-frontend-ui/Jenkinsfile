@@ -1,0 +1,38 @@
+pipeline {
+  agent any
+
+  stages {
+    stage('Install') {
+      steps {
+        sh 'npm ci'
+      }
+    }
+
+    stage('Test') {
+      steps {
+        sh 'npm test -- --passWithNoTests'
+      }
+    }
+
+    stage('Build') {
+      steps {
+        sh 'npm run build'
+      }
+    }
+
+    stage('Package') {
+      steps {
+        sh 'zip -r artifact.zip dist/'
+      }
+    }
+  }
+
+  post {
+    success {
+      echo 'Frontend build succeeded'
+    }
+    failure {
+      echo 'Frontend build failed'
+    }
+  }
+}

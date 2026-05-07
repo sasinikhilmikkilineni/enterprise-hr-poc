@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Environment files (secrets)
+.env
+.env.local
+.env.production
+
+# Build output
+dist/
+build/
+
+# Deploy artifacts
+*.zip
+backend-deploy.zip
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# CDK
+infrastructure/cdk.out/
+infrastructure/node_modules/

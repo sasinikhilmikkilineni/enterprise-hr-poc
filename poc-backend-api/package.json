@@ -1,0 +1,29 @@
+{
+  "name": "poc-backend-api",
+  "version": "1.0.0",
+  "description": "Enterprise HR PoC — Backend API (Express + Aurora + Okta)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.600.0",
+    "@aws-sdk/client-secrets-manager": "^3.600.0",
+    "@aws-sdk/s3-request-presigner": "^3.600.0",
+    "@okta/jwt-verifier": "^3.0.1",
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "mysql2": "^3.10.1",
+    "openai": "^6.37.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "MIT"
+}

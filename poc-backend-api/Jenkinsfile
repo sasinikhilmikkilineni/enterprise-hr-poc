@@ -1,0 +1,38 @@
+pipeline {
+  agent any
+
+  stages {
+    stage('Install') {
+      steps {
+        sh 'npm ci'
+      }
+    }
+
+    stage('Test') {
+      steps {
+        sh 'npm test -- --passWithNoTests'
+      }
+    }
+
+    stage('Build') {
+      steps {
+        sh 'echo Build complete'
+      }
+    }
+
+    stage('Package') {
+      steps {
+        sh 'zip -r artifact.zip . -x "*.git*" "node_modules/*"'
+      }
+    }
+  }
+
+  post {
+    success {
+      echo 'Backend build succeeded'
+    }
+    failure {
+      echo 'Backend build failed'
+    }
+  }
+}
