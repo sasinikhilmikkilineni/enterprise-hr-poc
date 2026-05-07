@@ -20,7 +20,7 @@ pipeline {
     stage('Test') {
       steps {
         dir('poc-backend-api') {
-          sh 'npm test -- --passWithNoTests'
+          sh 'npm test'
         }
       }
     }
