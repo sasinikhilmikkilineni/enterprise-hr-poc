@@ -11,8 +11,8 @@ Full-stack enterprise HR portal demonstrating cloud-native architecture on AWS w
 | Frontend    | React 18 + Vite + Tailwind CSS, deployed to S3 + CloudFront |
 | Backend     | Node.js 20 + Express on Elastic Beanstalk               |
 | Database    | Aurora Serverless v2 MySQL (employees dataset)          |
-| Auth        | Okta OIDC PKCE — SSO with role-based groups             |
-| CI/CD       | GitHub → Jenkins (EC2) → Elastic Beanstalk / S3         |
+| Auth        | Okta OIDC PKCE — SSO with role-based groups + GitHub Social IDP |
+| CI/CD       | GitHub → Jenkins (EC2, Okta SSO) → Elastic Beanstalk / S3 |
 | AI          | OpenAI GPT-4o-mini — HR AI Assistant (HR users only)    |
 | Storage     | S3 with presigned URLs (upload + download)              |
 | Secrets     | AWS Secrets Manager                                     |
@@ -33,7 +33,7 @@ Full-stack enterprise HR portal demonstrating cloud-native architecture on AWS w
 
 | Feature                  | Description                                              |
 |--------------------------|----------------------------------------------------------|
-| Okta SSO                 | OIDC PKCE login, two user groups with different access   |
+| Okta SSO                 | OIDC PKCE login, two user groups; GitHub Social IDP for GitHub login |
 | Employee Directory       | Paginated table — salary/hire date/gender hidden from non-HR |
 | Document Center          | HR-only S3 document upload/download with presigned URLs  |
 | HR AI Assistant          | Ask natural language questions about employees (HR only) |
@@ -65,6 +65,26 @@ Full-stack enterprise HR portal demonstrating cloud-native architecture on AWS w
 | GET    | `/api/sfdc/contacts`           | Yes      | CRM contacts                       |
 | POST   | `/api/hr/ask`                  | HR only  | AI employee query (OpenAI)         |
 
+## SSO Architecture
+
+```
+  Browser
+     │
+     ├──► HR Portal (CloudFront)
+     │       │ Okta OIDC PKCE
+     │       ▼
+     │    Okta IdP ◄──── GitHub Social IDP (OAuth2)
+     │    (integrator-3623755.okta.com)
+     │       │ JWT
+     │       ▼
+     │    Express API (EB) — verifies Okta JWT
+     │
+     └──► Jenkins CI (98.82.11.217:8080)
+              │ Okta OIDC (oic-auth plugin)
+              ▼
+           Okta IdP (Jenkins CI app, OIDC)
+```
+
 ## CI/CD Pipeline
 
 ```
@@ -74,7 +94,7 @@ Developer pushes to GitHub
    GitHub Webhook
          │
          ▼
-  Jenkins on EC2 (98.82.11.217:8080)
+  Jenkins on EC2 (Okta SSO via OIDC)
          │
     ┌────┴────┐
     ▼         ▼
